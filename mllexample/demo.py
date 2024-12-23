@@ -27,6 +27,7 @@ O_tr_T_list = np.array([])
 #元学习器的Y_train
 O_tr_Y_list = np.array([])
 
+real_label = np.array([])
 rd = ReadData(datas=datasnames, genpath='data/')
 X_train, Y_train, X_test, Y_test = rd.readData(0)
 print(np.shape(X_train), np.shape(Y_train), np.shape(X_test), np.shape(Y_test))
@@ -49,16 +50,15 @@ def BRC_test(X):
 
 def train_BRC_train(X, Y):
     for i in range(Y.shape[1]):
+        print(Y.shape[1])
         cfl = LogisticRegression()
         cfl.fit(X, Y[:, i])
         BR_cfl_train.append(cfl)
         all_clf_test.append(cfl)
+    print(Y.shape[1])
 
 
-def train_BRC_test(X):
-    for clf in BR_cfl_train:
-        BR_cfl_test.append(clf.predict(X))
-    return np.array(BR_cfl_test).T
+
 
 
 for h in range(5):
@@ -119,8 +119,8 @@ test_result = np.array([])
 def test_BRC_test(X, star,end):
     for i in range(star,end):
         clf = all_clf_train[i]
-        BR_cfl_test.append(clf.predict(X))
-    return np.array(BR_cfl_test).T
+        BR_cfl_train.append(clf.predict(X))
+    return np.array(BR_cfl_train).T
 
 
 
@@ -156,8 +156,15 @@ for h in range(5):
     X_te = np.array(X_te_list)
     Y_te = np.array(Y_te_list)
     test_result = test_BRC_test(X_tr,star,end)
+    if h == 4:
+        real_label = Y_tr
     #    BRC_test(X_te)
     #    O_tr_T_list = np.append(O_tr_T_list, BRC_test(X_te))
-test_train_BRC_test(test_result)
+final_result = test_train_BRC_test(test_result)
 
+correct_matrix = (final_result == real_label)
+num_correct = np.sum(correct_matrix)
+
+accuracy = num_correct / (788*14)
+print(accuracy)
 
