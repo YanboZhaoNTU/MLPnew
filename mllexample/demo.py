@@ -1,7 +1,7 @@
 from u_mReadData import *
 from u_base import *
 import numpy as np
-
+from u_evaluation import *
 BR_cfl_train = []
 BR_cfl_test = []
 save_OR_D = []
@@ -164,7 +164,7 @@ final_result = test_train_BRC_test(test_result)
 
 correct_matrix = (final_result == real_label)
 num_correct = np.sum(correct_matrix)
-
+eva = evaluate(final_result,real_label)
+print(eva)
 accuracy = num_correct / (788*14)
-print(accuracy)
 
