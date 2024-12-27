@@ -61,7 +61,7 @@ def train_BRC_train(X, Y):
 
 
 
-for h in range(5):
+for h in range(3):
 
     X_tr_list = []
     Y_tr_list = []
@@ -152,14 +152,14 @@ Y_tr = np.array(Y_tr_list)
 X_te = np.array(X_te_list)
 Y_te = np.array(Y_te_list)
 
-for h in range(5):
+for h in range(3):
     star = test_clf_num
     end = test_clf_num + 14
     test_clf_num = test_clf_num + 14
 
     test_result = test_BRC_test(X_tr,star,end)
     fr = fr+test_result
-print(fr)
+fr = fr/5
 
 correct_matrix = (fr == Y_tr_list)
 num_correct = np.sum(correct_matrix)
