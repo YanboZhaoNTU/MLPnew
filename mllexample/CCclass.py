@@ -11,61 +11,72 @@ class CCclass:
         self.CC_cfl_test = []
         self.all_clf_train = []
         self.all_clf_test = []
+        self.basic_result = []
+        self.circle_result = []
+        self.num = 0
 
 
     def train(self, X, Y):
         L = Y.shape[1]
         N = X.shape[0]
+        D_j_prime_x = []
+        D_j_prime_y = []
 
         for j in range(L):
             # D'j
-            D_j_prime_x = []
-            D_j_prime_y = []
+
             # for (x, y) ∈ D
-            for i in range(N):
+
                 #do x' ← [x1,...,xd ,y1,...,yj−1]
-                if j == 0:
-                    x_prime = X[i]
-                else:
-                    x_prime = np.concatenate((X[i], Y[i,:j]))
+            if j == 0:
+                x_prime = np.array(X)
+            else:
+                x_prime = np.hstack((x_prime, Y[:,[j]]))
                 # Dj' ← Dj ∪ (x' ,yj )
-                D_j_prime_x.append(x_prime)
-                D_j_prime_y.append(Y[i,j])
+            D_j_prime_x = x_prime
+            D_j_prime_y = Y
 
             D_j_prime_x = np.array(D_j_prime_x)
             D_j_prime_y = np.array(D_j_prime_y)
             # train hj to predict binary relevance of yj
             # P(y=1∣X)= 1/ (1+a) a = e的-（wX+b）次方
             clf = LogisticRegression()
-            clf.fit(D_j_prime_x, D_j_prime_y)
+            clf.fit(D_j_prime_x, D_j_prime_y[:,j])
             self.classifiers.append(clf)
             self.all_clf_train.append(clf)
+            self.num = self.num + 1
+            print("use"+str(self.num))
 
 
     def CC_test(self, X, Y):
-
         LT = Y.shape[1]
-        NT = X.shape[0]
         y_hat = []
         # for j = 1,...,L
         for j in range(LT):
             D_j_prime_x = []
             # do x' ← [x1,...,xd , yˆ1,..., yˆj−1]
-            for i in range(NT):
-                if j == 0:
-                    x_prime = X[i]
-                else:
-                    x_prime = np.concatenate((X[i], y_hat))
-                D_j_prime_x.append(x_prime)
+
+            if j == 0:
+                x_prime = X
+            else:
+                cnm = np.array(y_hat)
+                cnm = cnm.reshape(-1, 1)
+                print(cnm.shape)
+                print(X.shape)
+                x_prime = np.column_stack((x_prime, cnm))
+            D_j_prime_x.append(x_prime)
 
             D_j_prime_x = np.array(D_j_prime_x)
-
+            p = D_j_prime_x[0]
             # do x' ← [x1,...,xd , yˆ1,..., yˆj−1]
-            y_pred_j = self.classifiers[j].predict(D_j_prime_x)[0]
-
+            y_pred_j = self.classifiers[j].predict(p)
+            y_hat = []
+            y_hat.append(y_pred_j)
+            y_hat = np.array(y_hat).flatten()
+            y_hat = y_hat.tolist()
             # return y
-            self.CC_cfl_test.append(y_pred_j)
-            return np.array(self.CC_cfl_test).T
+            self.CC_cfl_test.append(y_hat)
+        return np.array(self.CC_cfl_test).T
 # 训练元学习器
     def CC_train_BR_train(self, X, Y):
         for i in range(Y.shape[1]):
@@ -76,26 +87,43 @@ class CCclass:
             self.all_clf_test.append(cfl)
 # 测试基学习器
     def test_BRC_test(self, X, star, end):
+        print(star, end)
         y_hat = []
+        x_prime = np.array(X)
+        j = 0
         for i in range(star, end):
+            print("i"+str(i))
             D_j_prime_x = []
             # do x' ← [x1,...,xd , yˆ1,..., yˆj−1]
-            for j in range(X):
-                if j == 0:
-                    x_prime = X[j]
-                else:
-                    x_prime = np.concatenate((X[j], y_hat))
-                D_j_prime_x.append(x_prime)
 
+            if j == 0:
+                x_prime = np.array(X)
+                j = j+1
+            else:
+                cnm = np.array(y_hat)
+                cnm = cnm.reshape(-1, 1)
+                print(cnm.shape)
+                print(x_prime.shape)
+                x_prime = np.column_stack((x_prime, cnm))
+            D_j_prime_x.append(x_prime)
             D_j_prime_x = np.array(D_j_prime_x)
-
+            p = D_j_prime_x[0]
             # do x' ← [x1,...,xd , yˆ1,..., yˆj−1]
-            y_pred_j = self.classifiers[i].predict(D_j_prime_x)[0]
-
+            y_pred_j = self.all_clf_train[i].predict(p)
+            y_hat = []
             # return y
             y_hat.append(y_pred_j)
             y_hat = np.array(y_hat).flatten()
             y_hat = y_hat.tolist()
+            print(y_hat)
+            self.basic_result.append(y_hat)
+
+        return np.array(self.basic_result).T
+
+    def BR_test_BRC_test(self, X):
+        for clf in self.all_clf_test:
+            self.circle_result.append(clf.predict(X))
+        return np.array(self.circle_result).T
 
 
     def CCCLF_clear(self):
